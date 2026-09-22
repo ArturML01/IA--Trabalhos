@@ -190,6 +190,22 @@ for time in GRUPOS["A"]:
     estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
     print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
+print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+for time in GRUPOS["B"]:
+    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
+    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
+
+print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+for time in GRUPOS["C"]:
+    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
+    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
+
+print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+for time in GRUPOS["D"]:
+    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
+    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
+
+
 print("\n--- SEDES DEFINIDAS PARA O MATA-MATA (A Partir do 3º Jogo) ---")
 print(f"  Oitavas (Se 1º lugar): {ESTADIOS[SEDES_MATA_MATA['Oitavas_1st']]}")
 print(f"  Oitavas (Se 2º lugar): {ESTADIOS[SEDES_MATA_MATA['Oitavas_2nd']]}")
