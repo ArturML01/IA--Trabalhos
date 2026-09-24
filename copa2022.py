@@ -190,17 +190,17 @@ for time in GRUPOS["A"]:
     estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
     print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
-print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+print("\n--- PROGRAMAÇÃO DO GRUPO B (Fase de Grupos) ---")
 for time in GRUPOS["B"]:
     estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
     print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
-print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+print("\n--- PROGRAMAÇÃO DO GRUPO C (Fase de Grupos) ---")
 for time in GRUPOS["C"]:
     estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
     print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
-print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
+print("\n--- PROGRAMAÇÃO DO GRUPO D (Fase de Grupos) ---")
 for time in GRUPOS["D"]:
     estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
     print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
