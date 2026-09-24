@@ -46,8 +46,8 @@ DISTANCIAS = np.array([
 
 # Atribuição fixa dos estádios para a fase de Mata-Mata
 SEDES_MATA_MATA = {
-    "Oitavas_1st": 1,  # Al Bayt (Ex: 1º do Grupo)
-    "Oitavas_2nd": 3,  # Al Thumama (Ex: 2º do Grupo)
+    "Oitavas_1st": 1,  # Al Bayt 
+    "Oitavas_2nd": 3,  # Al Thumama 
     "Quartas":     4,  # Education City
     "Semifinal":   6,  # Khalifa International
     "Final":       0   # Lusail
