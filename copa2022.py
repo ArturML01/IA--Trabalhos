@@ -5,12 +5,16 @@ import numpy as np
 # 1. BASE DE DADOS: SELEÇÕES, ESTÁDIOS E DISTÂNCIAS (CATAR 2022)
 # ---------------------------------------------------------
 
-# 16 Seleções divididas em 4 Grupos (A, B, C, D)
+# Todas as 32 Seleções divididas em 8 Grupos (A ate H)
 GRUPOS = {
     "A": ["Catar", "Equador", "Senegal", "Holanda"],
-    "B": ["Inglaterra", "Irã", "EUA", "País de Gales"],
+    "B": ["Inglaterra", "Irã", "Estados Unidos", "País de Gales"],
     "C": ["Argentina", "Arábia Saudita", "México", "Polônia"],
-    "D": ["França", "Austrália", "Dinamarca", "Tunísia"]
+    "D": ["França", "Austrália", "Dinamarca", "Tunísia"],
+    "E": ["Espanha", "Costa Rica", "Alemanha", "Japão"],
+    "F": ["Bélgica", "Canadá", "Marrocos", "Croácia"],
+    "G": ["Brasil", "Sérvia", "Suíça", "Camarões"],
+    "H": ["Portugal", "Gana", "Uruguai", "Coreia do Sul"]
 }
 
 SELECOES = [time for grupo in GRUPOS.values() for time in grupo]
@@ -61,7 +65,6 @@ def criar_individuo():
     """
     tabela = {}
     for nome_grupo, times in GRUPOS.items():
-        # Cada grupo joga suas partidas em estádios sorteados por rodada
         for time in times:
             tabela[time] = [random.randint(0, len(ESTADIOS) - 1) for _ in range(3)]
     return tabela
@@ -77,18 +80,15 @@ def calcular_distancia_time(estadios_fase_grupos):
     ultimo_estadio_grupo = estadios_fase_grupos[-1]
     
     # 2. Trajeto se classificar em 1º lugar no grupo:
-    # Último jogo do grupo -> Oitavas(1st) -> Quartas -> Semifinal -> Final
     caminho_1st = [ultimo_estadio_grupo, SEDES_MATA_MATA["Oitavas_1st"],
                    SEDES_MATA_MATA["Quartas"], SEDES_MATA_MATA["Semifinal"], SEDES_MATA_MATA["Final"]]
     dist_1st = sum(DISTANCIAS[caminho_1st[i]][caminho_1st[i+1]] for i in range(len(caminho_1st)-1))
     
     # 3. Trajeto se classificar em 2º lugar no grupo:
-    # Último jogo do grupo -> Oitavas(2nd) -> Quartas -> Semifinal -> Final
     caminho_2nd = [ultimo_estadio_grupo, SEDES_MATA_MATA["Oitavas_2nd"],
                    SEDES_MATA_MATA["Quartas"], SEDES_MATA_MATA["Semifinal"], SEDES_MATA_MATA["Final"]]
     dist_2nd = sum(DISTANCIAS[caminho_2nd[i]][caminho_2nd[i+1]] for i in range(len(caminho_2nd)-1))
     
-    # Distância total = Grupos + Média ponderada do Mata-Mata
     return dist_grupos + (0.5 * dist_1st + 0.5 * dist_2nd)
 
 def calcular_custo_total(individuo):
@@ -101,11 +101,13 @@ def calcular_custo_total(individuo):
         distancia_total += calcular_distancia_time(estadios)
         
     # 2. Penalidade por sobrecarga de estádios na mesma rodada da fase de grupos
+    # 32 times (16 jogos por rodada) e 8 estádios, a média perfeita é 2 jogos/estádio.
     for rodada in range(3):
         estadios_usados = [estadios[rodada] for estadios in individuo.values()]
         for e in set(estadios_usados):
-            if estadios_usados.count(e) > 3:  # Mais de 3 jogos no mesmo estádio na mesma rodada
-                penalidade += 300
+            
+            if estadios_usados.count(e) > 4:
+                penalidade += 500
                 
     return distancia_total + penalidade
 
@@ -121,7 +123,7 @@ def cruzamento(pai1, pai2):
     """Combina alocações de estádios: metade dos grupos do Pai 1, metade do Pai 2."""
     filho = {}
     grupos_chaves = list(GRUPOS.keys())
-    ponto_corte = len(grupos_chaves) // 2
+    ponto_corte = len(grupos_chaves) // 2  
     
     grupos_p1 = grupos_chaves[:ponto_corte]
     
@@ -147,21 +149,21 @@ def mutacao(individuo, taxa_mutacao=0.15):
 # 4. EXECUÇÃO DO ALGORITMO GENÉTICO
 # ---------------------------------------------------------
 
-TAMANHO_POPULACAO = 60
-GERACOES = 120
+TAMANHO_POPULACAO = 100
+GERACOES = 250
 
 populacao = [criar_individuo() for _ in range(TAMANHO_POPULACAO)]
 
-print("Otimizando tabela (Fase de Grupos + Mata-Mata Probabilístico)...\n")
+print("Otimizando tabela para as 32 Seleções (Fase de Grupos + Mata-Mata)...\n")
 
 for gen in range(GERACOES):
     populacao.sort(key=calcular_custo_total)
     melhor_custo = calcular_custo_total(populacao[0])
     
-    if (gen + 1) % 30 == 0 or gen == 0:
+    if (gen + 1) % 50 == 0 or gen == 0:
         print(f"Geração {gen+1:3d} | Menor Trajeto Médio Total: {melhor_custo:.1f} km")
         
-    proxima_gen = populacao[:4]  # Elitismo: preserva os 4 melhores
+    proxima_gen = populacao[:5]  
     
     while len(proxima_gen) < TAMANHO_POPULACAO:
         p1 = selecao_torneio(populacao)
@@ -172,7 +174,6 @@ for gen in range(GERACOES):
         
     populacao = proxima_gen
 
-# Melhor Tabela Encontrada
 melhor_tabela = min(populacao, key=calcular_custo_total)
 menor_distancia = calcular_custo_total(melhor_tabela)
 
@@ -181,30 +182,14 @@ menor_distancia = calcular_custo_total(melhor_tabela)
 # ---------------------------------------------------------
 
 print("\n" + "="*60)
-print(f" TABELA OTIMIZADA (MÉDIA TOTAL: {menor_distancia:.1f} km)")
+print(f" TABELA OTIMIZADA PARA 32 SELEÇÕES (MÉDIA TOTAL: {menor_distancia:.1f} km)")
 print("="*60)
 
-# Exemplo do Grupo A
-print("\n--- PROGRAMAÇÃO DO GRUPO A (Fase de Grupos) ---")
-for time in GRUPOS["A"]:
-    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
-    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
-
-print("\n--- PROGRAMAÇÃO DO GRUPO B (Fase de Grupos) ---")
-for time in GRUPOS["B"]:
-    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
-    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
-
-print("\n--- PROGRAMAÇÃO DO GRUPO C (Fase de Grupos) ---")
-for time in GRUPOS["C"]:
-    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
-    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
-
-print("\n--- PROGRAMAÇÃO DO GRUPO D (Fase de Grupos) ---")
-for time in GRUPOS["D"]:
-    estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
-    print(f"  {time:12s} -> Rodada 1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
-
+for nome_grupo, times in GRUPOS.items():
+    print(f"\n--- PROGRAMAÇÃO DO GRUPO {nome_grupo} (Fase de Grupos) ---")
+    for time in times:
+        estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
+        print(f"  {time:15s} -> R1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
 print("\n--- SEDES DEFINIDAS PARA O MATA-MATA (A Partir do 3º Jogo) ---")
 print(f"  Oitavas (Se 1º lugar): {ESTADIOS[SEDES_MATA_MATA['Oitavas_1st']]}")
