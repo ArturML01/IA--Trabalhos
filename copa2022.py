@@ -5,7 +5,6 @@ import numpy as np
 # 1. BASE DE DADOS: SELEÇÕES, ESTÁDIOS E DISTÂNCIAS (CATAR 2022)
 # ---------------------------------------------------------
 
-# Todas as 32 Seleções divididas em 8 Grupos (A ate H)
 GRUPOS = {
     "A": ["Catar", "Equador", "Senegal", "Holanda"],
     "B": ["Inglaterra", "Irã", "Estados Unidos", "País de Gales"],
@@ -21,17 +20,16 @@ SELECOES = [time for grupo in GRUPOS.values() for time in grupo]
 NUM_SELECOES = len(SELECOES)
 
 ESTADIOS = [
-    "Lusail Iconic Stadium",      # 0
-    "Al Bayt Stadium (Al Khor)",  # 1
-    "Stadium 974 (Doha)",          # 2
-    "Al Thumama (Doha)",          # 3
-    "Education City (Rayyan)",    # 4
-    "Ahmad bin Ali (Rayyan)",     # 5
-    "Khalifa International",      # 6
-    "Al Janoub (Al Wakrah)"       # 7
+    "Lusail Iconic Stadium",     
+    "Al Bayt Stadium (Al Khor)",  
+    "Stadium 974 (Doha)",          
+    "Al Thumama (Doha)",          
+    "Education City (Rayyan)",    
+    "Ahmad bin Ali (Rayyan)",     
+    "Khalifa International",      
+    "Al Janoub (Al Wakrah)"       
 ]
 
-# Matriz de distâncias (km) entre os estádios do Catar
 DISTANCIAS = np.array([
     # 0   1   2   3   4   5   6   7
     [ 0, 35, 20, 25, 22, 23, 21, 38],  # 0: Lusail
@@ -101,7 +99,6 @@ def calcular_custo_total(individuo):
         distancia_total += calcular_distancia_time(estadios)
         
     # 2. Penalidade por sobrecarga de estádios na mesma rodada da fase de grupos
-    # 32 times (16 jogos por rodada) e 8 estádios, a média perfeita é 2 jogos/estádio.
     for rodada in range(3):
         estadios_usados = [estadios[rodada] for estadios in individuo.values()]
         for e in set(estadios_usados):
@@ -178,7 +175,7 @@ melhor_tabela = min(populacao, key=calcular_custo_total)
 menor_distancia = calcular_custo_total(melhor_tabela)
 
 # ---------------------------------------------------------
-# 5. RESULTADOS DETALHADOS
+# 5. RESULTADOS 
 # ---------------------------------------------------------
 
 print("\n" + "="*60)
