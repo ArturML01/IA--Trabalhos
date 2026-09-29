@@ -42,7 +42,6 @@ DISTANCIAS = np.array([
     [38, 65, 20, 12, 28, 32, 25,  0]   # 7: Al Janoub
 ])
 
-# Atribuição fixa dos estádios para a fase de Mata-Mata
 SEDES_MATA_MATA = {
     "Oitavas_1st": 1,  # Al Bayt 
     "Oitavas_2nd": 3,  # Al Thumama 
@@ -53,7 +52,7 @@ SEDES_MATA_MATA = {
 
 
 # ---------------------------------------------------------
-# 2. GERAÇÃO DE INDIVÍDUOS E CÁLCULO DE DISTÂNCIA
+# 2. GERAÇÃO DE INDIVÍDUOS E CÁLCULO DE DISTÂNCIA PONDERADA
 # ---------------------------------------------------------
 
 def criar_individuo():
@@ -69,40 +68,54 @@ def criar_individuo():
 
 def calcular_distancia_time(estadios_fase_grupos):
     """
-    Calcula o trajeto da Fase de Grupos + Média Esperada do Mata-Mata (50% 1º / 50% 2º).
+    Calcula o trajeto esperado considerando o funil de eliminação real do torneio:
+    - 100.0% de chance de jogar a Fase de Grupos (32 seleções)
+    -  50.0% de chance de ir para as Oitavas de Final (16 seleções)
+    -  25.0% de chance de ir para as Quartas de Final (8 seleções)
+    -  12.5% de chance de ir para a Semifinal (4 seleções)
+    -   6.25% de chance de ir para a Final (2 seleções)
     """
-    # 1. Distância na Fase de Grupos (3 jogos)
+    # 1. Fase de Grupos (2 deslocamentos garantidos para todas as 32 seleções)
     dist_grupos = (DISTANCIAS[estadios_fase_grupos[0]][estadios_fase_grupos[1]] +
                    DISTANCIAS[estadios_fase_grupos[1]][estadios_fase_grupos[2]])
     
     ultimo_estadio_grupo = estadios_fase_grupos[-1]
     
-    # 2. Trajeto se classificar em 1º lugar no grupo:
-    caminho_1st = [ultimo_estadio_grupo, SEDES_MATA_MATA["Oitavas_1st"],
-                   SEDES_MATA_MATA["Quartas"], SEDES_MATA_MATA["Semifinal"], SEDES_MATA_MATA["Final"]]
-    dist_1st = sum(DISTANCIAS[caminho_1st[i]][caminho_1st[i+1]] for i in range(len(caminho_1st)-1))
+    # 2. Deslocamento até as Oitavas (P = 0.50)
+    # Pondera 50% de chance de passar em 1º (Oitavas_1st) e 50% em 2º (Oitavas_2nd)
+    dist_para_oitavas = 0.5 * DISTANCIAS[ultimo_estadio_grupo][SEDES_MATA_MATA["Oitavas_1st"]] + \
+                        0.5 * DISTANCIAS[ultimo_estadio_grupo][SEDES_MATA_MATA["Oitavas_2nd"]]
     
-    # 3. Trajeto se classificar em 2º lugar no grupo:
-    caminho_2nd = [ultimo_estadio_grupo, SEDES_MATA_MATA["Oitavas_2nd"],
-                   SEDES_MATA_MATA["Quartas"], SEDES_MATA_MATA["Semifinal"], SEDES_MATA_MATA["Final"]]
-    dist_2nd = sum(DISTANCIAS[caminho_2nd[i]][caminho_2nd[i+1]] for i in range(len(caminho_2nd)-1))
+    # 3. Deslocamento Oitavas -> Quartas (P = 0.25)
+    dist_para_quartas = 0.5 * DISTANCIAS[SEDES_MATA_MATA["Oitavas_1st"]][SEDES_MATA_MATA["Quartas"]] + \
+                        0.5 * DISTANCIAS[SEDES_MATA_MATA["Oitavas_2nd"]][SEDES_MATA_MATA["Quartas"]]
     
-    return dist_grupos + (0.5 * dist_1st + 0.5 * dist_2nd)
+    # 4. Deslocamento Quartas -> Semifinal (P = 0.125)
+    dist_para_semi = DISTANCIAS[SEDES_MATA_MATA["Quartas"]][SEDES_MATA_MATA["Semifinal"]]
+    
+    # 5. Deslocamento Semifinal -> Final (P = 0.0625)
+    dist_para_final = DISTANCIAS[SEDES_MATA_MATA["Semifinal"]][SEDES_MATA_MATA["Final"]]
+    
+    # Somatório do Valor Esperado no Mata-Mata
+    mata_mata_esperado = (0.5000 * dist_para_oitavas) + \
+                         (0.2500 * dist_para_quartas) + \
+                         (0.1250 * dist_para_semi) + \
+                         (0.0625 * dist_para_final)
+    
+    return dist_grupos + mata_mata_esperado
 
 def calcular_custo_total(individuo):
-    """Soma a distância de todas as seleções no campeonato com penalidades logísticas."""
+    """Soma a distância ponderada de todas as seleções com penalidades logísticas."""
     distancia_total = 0
     penalidade = 0
     
-    # 1. Soma trajetos de cada time
     for time, estadios in individuo.items():
         distancia_total += calcular_distancia_time(estadios)
         
-    # 2. Penalidade por sobrecarga de estádios na mesma rodada da fase de grupos
+    # Penalidade por sobrecarga de estádios (> 4 jogos na mesma rodada)
     for rodada in range(3):
         estadios_usados = [estadios[rodada] for estadios in individuo.values()]
         for e in set(estadios_usados):
-            
             if estadios_usados.count(e) > 4:
                 penalidade += 500
                 
@@ -117,11 +130,9 @@ def selecao_torneio(populacao, k=3):
     return min(competidores, key=calcular_custo_total)
 
 def cruzamento(pai1, pai2):
-    """Combina alocações de estádios: metade dos grupos do Pai 1, metade do Pai 2."""
     filho = {}
     grupos_chaves = list(GRUPOS.keys())
     ponto_corte = len(grupos_chaves) // 2  
-    
     grupos_p1 = grupos_chaves[:ponto_corte]
     
     for nome_grupo, times in GRUPOS.items():
@@ -133,7 +144,6 @@ def cruzamento(pai1, pai2):
     return filho
 
 def mutacao(individuo, taxa_mutacao=0.15):
-    """Sorteia e altera o estádio de uma das rodadas da fase de grupos para uma seleção."""
     mutado = {time: list(estadios) for time, estadios in individuo.items()}
     for time in mutado:
         if random.random() < taxa_mutacao:
@@ -151,16 +161,16 @@ GERACOES = 250
 
 populacao = [criar_individuo() for _ in range(TAMANHO_POPULACAO)]
 
-print("Otimizando tabela para as 32 Seleções (Fase de Grupos + Mata-Mata)...\n")
+print("Otimizando tabela para as 32 Seleções (Funil Realista de Eliminação)...\n")
 
 for gen in range(GERACOES):
     populacao.sort(key=calcular_custo_total)
     melhor_custo = calcular_custo_total(populacao[0])
     
     if (gen + 1) % 50 == 0 or gen == 0:
-        print(f"Geração {gen+1:3d} | Menor Trajeto Médio Total: {melhor_custo:.1f} km")
+        print(f"Geração {gen+1:3d} | Menor Trajeto Esperado Total: {melhor_custo:.1f} km")
         
-    proxima_gen = populacao[:5]  
+    proxima_gen = populacao[:5]  # Elitismo de 5%
     
     while len(proxima_gen) < TAMANHO_POPULACAO:
         p1 = selecao_torneio(populacao)
@@ -175,11 +185,11 @@ melhor_tabela = min(populacao, key=calcular_custo_total)
 menor_distancia = calcular_custo_total(melhor_tabela)
 
 # ---------------------------------------------------------
-# 5. RESULTADOS 
+# 5. RESULTADOS
 # ---------------------------------------------------------
 
 print("\n" + "="*60)
-print(f" TABELA OTIMIZADA PARA 32 SELEÇÕES (MÉDIA TOTAL: {menor_distancia:.1f} km)")
+print(f" TABELA OTIMIZADA PARA 32 SELEÇÕES (VALOR ESPERADO TOTAL: {menor_distancia:.1f} km)")
 print("="*60)
 
 for nome_grupo, times in GRUPOS.items():
@@ -188,7 +198,7 @@ for nome_grupo, times in GRUPOS.items():
         estadios_nomes = [ESTADIOS[i] for i in melhor_tabela[time]]
         print(f"  {time:15s} -> R1: {estadios_nomes[0]} | R2: {estadios_nomes[1]} | R3: {estadios_nomes[2]}")
 
-print("\n--- SEDES DEFINIDAS PARA O MATA-MATA (A Partir do 3º Jogo) ---")
+print("\n--- SEDES DEFINIDAS PARA O MATA-MATA ---")
 print(f"  Oitavas (Se 1º lugar): {ESTADIOS[SEDES_MATA_MATA['Oitavas_1st']]}")
 print(f"  Oitavas (Se 2º lugar): {ESTADIOS[SEDES_MATA_MATA['Oitavas_2nd']]}")
 print(f"  Quartas de Final:      {ESTADIOS[SEDES_MATA_MATA['Quartas']]}")
