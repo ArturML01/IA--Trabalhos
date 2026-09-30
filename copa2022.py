@@ -56,10 +56,7 @@ SEDES_MATA_MATA = {
 # ---------------------------------------------------------
 
 def criar_individuo():
-    """
-    Cria uma tabela onde cada grupo joga 3 rodadas na fase de grupos.
-    Retorna um dicionário {nome_selecao: [estadio_rodada_1, estadio_rodada_2, estadio_rodada_3]}
-    """
+   
     tabela = {}
     for nome_grupo, times in GRUPOS.items():
         for time in times:
@@ -67,14 +64,7 @@ def criar_individuo():
     return tabela
 
 def calcular_distancia_time(estadios_fase_grupos):
-    """
-    Calcula o trajeto esperado considerando o funil de eliminação real do torneio:
-    - 100.0% de chance de jogar a Fase de Grupos (32 seleções)
-    -  50.0% de chance de ir para as Oitavas de Final (16 seleções)
-    -  25.0% de chance de ir para as Quartas de Final (8 seleções)
-    -  12.5% de chance de ir para a Semifinal (4 seleções)
-    -   6.25% de chance de ir para a Final (2 seleções)
-    """
+   
     # 1. Fase de Grupos (2 deslocamentos garantidos para todas as 32 seleções)
     dist_grupos = (DISTANCIAS[estadios_fase_grupos[0]][estadios_fase_grupos[1]] +
                    DISTANCIAS[estadios_fase_grupos[1]][estadios_fase_grupos[2]])
@@ -105,7 +95,7 @@ def calcular_distancia_time(estadios_fase_grupos):
     return dist_grupos + mata_mata_esperado
 
 def calcular_custo_total(individuo):
-    """Soma a distância ponderada de todas as seleções com penalidades logísticas."""
+
     distancia_total = 0
     penalidade = 0
     
